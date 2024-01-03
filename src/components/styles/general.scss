@@ -1,0 +1,50 @@
+// G Fonts
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap');
+
+// Font Awesome
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+:root {
+  font-family: 'Noto Sans', sans-serif;
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #000000;
+  color: whitesmoke;
+}
+
+h2 {
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+i {
+  color: whitesmoke;
+}
+
+a {
+  color: whitesmoke;
+  text-decoration: none;
+}
+
+input {
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  padding: .5rem;
+  border-radius: 10rem;
+}
+
+img {
+  width: 100%;
+}
