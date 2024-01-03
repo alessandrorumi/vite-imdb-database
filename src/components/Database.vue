@@ -41,7 +41,46 @@ export default {
       } catch (error) {
         console.error('Errore nella chiamata Streaming Availability:', error);
       }
-    }
+    },
+
+    transformStreamingType(streamingType) {
+      if (streamingType === 'rent') {
+        return 'Noleggia';
+      } else if (streamingType === 'buy') {
+        return 'Compra';
+      } else if (streamingType === 'subscription') {
+        return 'Guarda';
+      } else if (streamingType === 'addon') {
+        return 'Apple TV (iTunes)';
+      }
+      return streamingType;
+    },
+
+    transformQuality(quality) {
+      if (quality === 'sd') {
+        return 'SD';
+      } else if (quality === 'hd') {
+        return '1080p';
+      } else if (quality === 'uhd') {
+        return '4K';
+      }
+      return quality;
+    },
+
+    transformService(service) {
+      if (service === 'netflix') {
+        return 'Netflix';
+      } else if (service === 'apple') {
+        return 'Apple TV';
+      } else if (service === 'prime') {
+        return 'Prime Video';
+      } else if (service === 'now') {
+        return 'Now TV';
+      } else if (service === 'disney') {
+        return 'Disney Plus';
+      }
+      return service;
+    },
   }
 }
 </script>
@@ -49,7 +88,7 @@ export default {
 
 <template>
   <div class="container">
-    <h1>MOVIE</h1>
+    <h1>Scegli cosa guardare</h1>
     <input type="text" v-model="name" @keyup.enter="getDataFromImdb">
     <div class="info" v-if="movieName && streamingData">
 
@@ -73,19 +112,25 @@ export default {
       <h3><i class="fa-solid fa-tv"></i> Streaming</h3>
       <!-- Piattaforme -->
       <div class="platforms">
-        <ul v-for="(item, index) in streamingData.result[0].streamingInfo.it" :key="index">
-          <li>{{ item.service }}</li>
-          <li>{{ item.streamingType }}</li>
-          <li>
-            <a :href="item.link" target="_blank" rel="noopener noreferrer">Guarda / Compra / Noleggia</a>
-          </li>
-        </ul>
+        <div v-for="(item, index) in streamingData.result[0].streamingInfo.it" :key="index">
+          <div>- {{ transformService(item.service) }}:</div>
+          <div v-if="item.streamingType === 'subscription'">
+            <a :href="item.link" target="_blank" rel="noopener noreferrer">
+              {{ transformStreamingType(item.streamingType) }}
+            </a>
+          </div>
+          <div v-if="item.streamingType !== 'subscription'">
+            <a :href="item.link" target="_blank" rel="noopener noreferrer">
+              {{ transformStreamingType(item.streamingType) }} ({{ transformQuality(item.quality) }})
+            </a>
+          </div>
+        </div>
       </div>
 
       <!-- Poster -->
-      <a :href="movieName.description[0]['#IMDB_URL']" target="_blank" rel="noopener noreferrer">
+      <!-- <a :href="movieName.description[0]['#IMDB_URL']" target="_blank" rel="noopener noreferrer">
         <img :src="movieName.description[0]['#IMG_POSTER']" alt="">
-      </a>
+      </a> -->
     </div>
   </div>
 </template>
@@ -103,6 +148,11 @@ export default {
 
     .platforms {
       margin: 1rem 0;
+
+      &>div {
+        display: flex;
+        margin-bottom: .5rem;
+      }
     }
   }
 }
