@@ -10,15 +10,6 @@ export default {
   },
   methods: {
     async getDataFromImdb() {
-      // Prima chiamata Axios
-      const imdbUrl = `https://search.imdbot.workers.dev/?q=${this.name}`;
-      try {
-        const imdbResponse = await axios.get(imdbUrl);
-        this.movieName = imdbResponse.data;
-      } catch (error) {
-        console.error('Errore nella chiamata IMDb:', error);
-      }
-
       // Seconda chiamata Axios
       const streamingOptions = {
         method: 'GET',
@@ -40,6 +31,15 @@ export default {
         this.streamingData = streamingResponse.data;
       } catch (error) {
         console.error('Errore nella chiamata Streaming Availability:', error);
+      }
+
+      // Prima chiamata Axios
+      const imdbUrl = `https://search.imdbot.workers.dev/?tt=${this.streamingData.result[0].imdbId}`;
+      try {
+        const imdbResponse = await axios.get(imdbUrl);
+        this.movieName = imdbResponse.data;
+      } catch (error) {
+        console.error('Errore nella chiamata IMDb:', error);
       }
     },
 
@@ -81,78 +81,263 @@ export default {
       }
       return service;
     },
+
+    formatNumber(number) {
+      return number.toLocaleString('it-IT');
+    },
   }
 }
 </script>
 
 
 <template>
-  <div class="container">
-    <h1>Scegli cosa guardare</h1>
+  <!-- Searchbar -->
+  <div class="search">
     <input type="text" v-model="name" @keyup.enter="getDataFromImdb">
-    <div class="info" v-if="movieName && streamingData">
+  </div>
 
-      <!-- Titolo AXIOS 2 (Link AXIOS 1) -->
-      <a :href="movieName.description[0]['#IMDB_URL']" target="_blank" rel="noopener noreferrer">
-        <h3>
-          <i class="fa-solid fa-film"></i> Titolo Originale:
-        </h3>
-        <h2>
-          {{ streamingData.result[0].title }}
-        </h2>
-      </a>
+  <div class="wrapper">
+    <div class="container-data">
+      <div v-if="movieName && streamingData">
 
-      <!-- Regista AXIOS 2-->
-      <h3><i class="fa-solid fa-user-large"></i> {{ streamingData.result[0].directors[0] }}</h3>
-
-      <!-- Anno Pubblicazione AXIOS 2-->
-      <h3><i class="fa-regular fa-calendar"></i> {{ streamingData.result[0].year }}</h3>
-
-      <!-- Streaming AXIOS 2 -->
-      <h3><i class="fa-solid fa-tv"></i> Streaming</h3>
-      <!-- Piattaforme -->
-      <div class="platforms">
-        <div v-for="(item, index) in streamingData.result[0].streamingInfo.it" :key="index">
-          <div>- {{ transformService(item.service) }}:</div>
-          <div v-if="item.streamingType === 'subscription'">
-            <a :href="item.link" target="_blank" rel="noopener noreferrer">
-              {{ transformStreamingType(item.streamingType) }}
+        <!-- Film -->
+        <div class="data" v-if="movieName.short['@type'] === 'Movie'">
+          <!-- Titolo Ita (Link) -->
+          <div class=" title-it">
+            <h3>
+              <i class="fa-solid fa-film"></i> Titolo:
+            </h3>
+            <a :href="`https://www.imdb.com/title/${streamingData.result[0].imdbId}`" target="_blank"
+              rel="noopener noreferrer">
+              <h2>
+                {{ movieName.top.titleText.text }}
+              </h2>
             </a>
           </div>
-          <div v-if="item.streamingType !== 'subscription'">
-            <a :href="item.link" target="_blank" rel="noopener noreferrer">
-              {{ transformStreamingType(item.streamingType) }} ({{ transformQuality(item.quality) }})
+
+          <!-- Titolo (Link) -->
+          <div class="title">
+            <h3>
+              <i class="fa-solid fa-film"></i> Titolo Originale:
+            </h3>
+            <a :href="`https://www.imdb.com/title/${streamingData.result[0].imdbId}`" target="_blank"
+              rel="noopener noreferrer">
+              <h2>
+                {{ movieName.top.originalTitleText.text }}
+              </h2>
             </a>
+          </div>
+
+          <!-- Ratings -->
+          <div class="ratings">
+            <img src="../assets/imdb.png" alt="">
+            <h3>{{ movieName.short.aggregateRating.ratingValue }}
+              ({{ formatNumber(movieName.short.aggregateRating.ratingCount) }} Voti)
+            </h3>
+          </div>
+
+          <!-- Ranking -->
+          <div class="ranking">
+            <h3>
+              <i class="fa-solid fa-ranking-star"></i> Ranking: {{ movieName.main.ratingsSummary.topRanking.rank }}°
+            </h3>
+          </div>
+
+          <!-- Durata -->
+          <div class="time">
+            <h3><i class="fa-solid fa-clock"></i> {{ movieName.top.runtime.displayableProperty.value.plainText }}</h3>
+          </div>
+
+          <!-- Regista-->
+          <div class="director">
+            <h3>
+              <a :href="movieName.short.director[0].url" target="_blank" rel="noopener noreferrer">
+                <i class="fa-solid fa-user-large"></i> {{ movieName.short.director[0].name }}
+              </a>
+            </h3>
+          </div>
+
+          <!-- Anno Pubblicazione-->
+          <div class="year">
+            <h3><i class="fa-regular fa-calendar"></i> {{ movieName.top.releaseDate.year }}</h3>
+          </div>
+
+          <!-- Streaming -->
+          <div class="streaming">
+            <h3><i class="fa-solid fa-tv"></i> Streaming:</h3>
+            <!-- Piattaforme -->
+            <div class="platforms">
+              <div v-for="(item, index) in streamingData.result[0].streamingInfo.it" :key="index">
+                <div id="service">{{ transformService(item.service) }}:</div>
+                <div v-if="item.streamingType === 'subscription'">
+                  <a :href="item.link" target="_blank" rel="noopener noreferrer">
+                    {{ transformStreamingType(item.streamingType) }}
+                  </a>
+                </div>
+                <div v-if="item.streamingType !== 'subscription'">
+                  <a :href="item.link" target="_blank" rel="noopener noreferrer">
+                    {{ transformStreamingType(item.streamingType) }} ({{ transformQuality(item.quality) }})
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Serie TV -->
+        <div class="data" v-if="movieName.short['@type'] === 'TVSeries'">
+          <!-- Titolo Ita (Link) -->
+          <div class=" title-it">
+            <h3>
+              <i class="fa-solid fa-film"></i> Titolo:
+            </h3>
+            <a :href="`https://www.imdb.com/title/${streamingData.result[0].imdbId}`" target="_blank"
+              rel="noopener noreferrer">
+              <h2>
+                {{ movieName.top.titleText.text }}
+              </h2>
+            </a>
+          </div>
+
+          <!-- Titolo (Link) -->
+          <div class="title">
+            <h3>
+              <i class="fa-solid fa-film"></i> Titolo Originale:
+            </h3>
+            <a :href="`https://www.imdb.com/title/${streamingData.result[0].imdbId}`" target="_blank"
+              rel="noopener noreferrer">
+              <h2>
+                {{ movieName.top.originalTitleText.text }}
+              </h2>
+            </a>
+          </div>
+
+          <!-- Trama -->
+          <div class="plot">
+            Trama: {{ movieName.top.plot.plotText.plainText }}
+          </div>
+
+          <!-- Ratings -->
+          <div class="ratings">
+            <img src="../assets/imdb.png" alt="">
+            <h3>{{ movieName.short.aggregateRating.ratingValue }}
+              ({{ formatNumber(movieName.short.aggregateRating.ratingCount) }} Voti)
+            </h3>
+          </div>
+
+          <!-- Ranking -->
+          <div class="ranking" v-if="movieName.main.ratingsSummary.topRanking !== null">
+            <h3>
+              <i class="fa-solid fa-ranking-star"></i> Ranking: {{ movieName.main.ratingsSummary.topRanking.rank }}° Serie
+              TV
+            </h3>
+          </div>
+
+          <!-- Stagioni -->
+          <div class="seasons">
+            <h3>Stagioni: {{ movieName.main.episodes.seasons[movieName.main.episodes.seasons.length - 1].number }}</h3>
+          </div>
+
+          <!-- Episodi -->
+          <div class="episodes">
+            <h3>Episodi: {{ movieName.main.episodes.episodes.total }}</h3>
+          </div>
+
+          <!-- Durata complessiva -->
+          <!-- <div class="time">
+            <h3><i class="fa-solid fa-clock"></i> Durata Tot: {{ movieName.top.runtime.displayableProperty.value.plainText
+            }}</h3>
+          </div> -->
+
+          <!-- Streaming -->
+          <div class="streaming">
+            <h3><i class="fa-solid fa-tv"></i> Streaming:</h3>
+            <!-- Piattaforme -->
+            <div class="platforms">
+              <div v-for="(item, index) in streamingData.result[0].streamingInfo.it" :key="index">
+                <div id="service">{{ transformService(item.service) }}:</div>
+                <div v-if="item.streamingType === 'subscription'">
+                  <a :href="item.link" target="_blank" rel="noopener noreferrer">
+                    {{ transformStreamingType(item.streamingType) }}
+                  </a>
+                </div>
+                <div v-if="item.streamingType !== 'subscription'">
+                  <a :href="item.link" target="_blank" rel="noopener noreferrer">
+                    {{ transformStreamingType(item.streamingType) }} ({{ transformQuality(item.quality) }})
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Poster -->
-      <!-- <a :href="movieName.description[0]['#IMDB_URL']" target="_blank" rel="noopener noreferrer">
-        <img :src="movieName.description[0]['#IMG_POSTER']" alt="">
-      </a> -->
+    <!-- Poster -->
+    <div class="container-poster" v-if="movieName && streamingData">
+      <a :href="`https://www.imdb.com/title/${streamingData.result[0].imdbId}`" target=" _blank"
+        rel="noopener noreferrer">
+        <img :src="movieName.short.image" alt="">
+      </a>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.container {
-  width: 50%;
-  margin: 0 auto;
-  padding: 3rem;
-  text-align: center;
+.search {
+  height: 40px;
+  padding: 0 6rem;
+  background-color: rgb(12, 12, 12);
+}
+
+.wrapper {
+  display: flex;
+  justify-content: space-around;
+  height: calc(100vh - 40px);
   background-color: rgb(12, 12, 12);
 
-  .info {
-    margin: 1rem;
+  .container-data {
+    padding: 1.5rem;
+    width: 50%;
 
-    .platforms {
-      margin: 1rem 0;
-
-      &>div {
-        display: flex;
+    .data {
+      .title-it {
         margin-bottom: .5rem;
       }
+
+      &>div {
+        margin-bottom: 1.5rem;
+
+        img {
+          width: 7.5%;
+          margin-right: .5rem;
+        }
+      }
+
+      .ratings {
+        display: flex;
+        align-items: center;
+      }
+
+      .platforms {
+        &>div {
+          margin-top: .5rem;
+          display: flex;
+
+          #service {
+            margin-right: .5rem;
+          }
+        }
+      }
+    }
+  }
+
+  .container-poster {
+    height: 100%;
+
+    img {
+      height: 100%;
+      display: block;
     }
   }
 }
