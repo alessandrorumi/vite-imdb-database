@@ -1,9 +1,11 @@
 <script setup>
 import Database from './components/Database.vue'
+import DatabaseV2 from './components/DatabaseV2.vue';
 </script>
 
 <template>
-  <Database />
+  <!-- <Database /> -->
+  <DatabaseV2 />
 </template>
 
 <style lang="scss">

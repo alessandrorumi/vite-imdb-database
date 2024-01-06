@@ -15,6 +15,7 @@
   font-family: 'Noto Sans', sans-serif;
   font-size: 16px;
   scroll-behavior: smooth;
+  color: whitesmoke;
 }
 
 body {
@@ -35,7 +36,8 @@ a {
   }
 }
 
-input {
+input,
+button {
   border: none;
   outline: none;
   font-size: 1rem;

@@ -89,7 +89,6 @@ export default {
 }
 </script>
 
-
 <template>
   <!-- Searchbar -->
   <div class="search">
@@ -137,7 +136,7 @@ export default {
           </div>
 
           <!-- Ranking -->
-          <div class="ranking">
+          <div class="ranking" v-if="movieName.main.ratingsSummary.topRanking !== null">
             <h3>
               <i class="fa-solid fa-ranking-star"></i> Ranking: {{ movieName.main.ratingsSummary.topRanking.rank }}°
             </h3>
